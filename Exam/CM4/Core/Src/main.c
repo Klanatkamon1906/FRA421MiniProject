@@ -74,6 +74,20 @@ ETH_HandleTypeDef heth;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+// CM4
+//Create structure of share memory region
+typedef struct
+{
+	uint32_t led1;
+	uint32_t led2;
+	uint32_t led3;
+	float someVar;
+	int someVar2;
+	uint8_t State;
+}ShareType;
+//assign structure at specific memory address(SRAM4/RAM_D3)
+ShareType *sharedMemory = (ShareType*)(0x38000000);
+uint8_t *ButtonState = 0;
 
 /* USER CODE END PV */
 
@@ -136,6 +150,44 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // Can CM4 lock HSEM1
+	  if(HAL_HSEM_FastTake(1) == HAL_OK)
+	  {
+		  sharedMemory->led1 = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+		  // Unlock HSEM1
+		  HAL_HSEM_Release(1,0);
+	  }
+//	  if(HAL_HSEM_FastTake(2) == HAL_OK)
+//	  {
+//		  sharedMemory->State = &ButtonState;
+//		  // Unlock HSEM2
+//		  HAL_HSEM_Release(2,0);
+//	  }
+//	  HAL_GPIO_WritePin(LED1_GPIO_Port,LED1_Pin,GPIO_PIN_RESET);
+//	  HAL_Delay(100);
+
+//	  switch(sharedMemory->State){
+//	  case 0:
+//		  break;
+//	  case '1':
+//		  HAL_GPIO_WritePin(LED2_GPIO_Port,LED2_Pin,GPIO_PIN_RESET);
+//		  HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_SET);
+//		  HAL_GPIO_WritePin(LED4_GPIO_Port,LED4_Pin,GPIO_PIN_SET);
+//		  break;
+//	  case '2':
+//		  HAL_GPIO_WritePin(LED2_GPIO_Port,LED2_Pin,GPIO_PIN_SET);
+//		  HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);
+//		  HAL_GPIO_WritePin(LED4_GPIO_Port,LED4_Pin,GPIO_PIN_SET);
+//		  break;
+//	  case '3':
+//		  HAL_GPIO_WritePin(LED2_GPIO_Port,LED2_Pin,GPIO_PIN_SET);
+//		  HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_SET);
+//		  HAL_GPIO_WritePin(LED4_GPIO_Port,LED4_Pin,GPIO_PIN_RESET);
+//		  break;
+//	  default:
+//		  break;
+//	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -251,6 +303,7 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -258,10 +311,37 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : S2_Pin S1_Pin S3_Pin */
+  GPIO_InitStruct.Pin = S2_Pin|S1_Pin|S3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin )
+{
+	if(GPIO_Pin == S1_Pin)
+	{
+		sharedMemory->State =  1;}
+	else if(GPIO_Pin == S2_Pin)
+	{
+		sharedMemory->State =  2;}
+	else if(GPIO_Pin == S3_Pin)
+	{
+		sharedMemory->State =  3;}
+}
 /* USER CODE END 4 */
 
 /**

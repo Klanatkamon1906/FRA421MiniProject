@@ -65,9 +65,16 @@ void Error_Handler(void);
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9
 #define STLINK_TX_GPIO_Port GPIOD
+#define LED4_Pin GPIO_PIN_4
+#define LED4_GPIO_Port GPIOD
+#define LED3_Pin GPIO_PIN_5
+#define LED3_GPIO_Port GPIOD
+#define LED2_Pin GPIO_PIN_6
+#define LED2_GPIO_Port GPIOD
+#define LED1_Pin GPIO_PIN_7
+#define LED1_GPIO_Port GPIOD
 #define LD2_Pin GPIO_PIN_1
 #define LD2_GPIO_Port GPIOE
-void   MX_GPIO_Init(void);
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
